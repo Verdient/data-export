@@ -54,7 +54,6 @@ class Utils
     /**
      * 获取器
      * @param Builder $builder 查询构建器
-     * @param array $ids 编号集合
      * @param array $columns 要查询的字段集合
      * @param string $filterKey 用于检索的键名
      * @param string $indexKey 用于索引的键名
@@ -63,13 +62,12 @@ class Utils
      */
     public static function fetcher(
         Builder $builder,
-        array $ids,
         array $columns,
         string $filterKey = 'id',
         string $indexKey = 'id',
         bool $multiple = false
     ): Closure {
-        return function () use ($builder, $ids, $columns, $filterKey, $indexKey, $multiple) {
+        return function (array $ids) use ($builder, $columns, $filterKey, $indexKey, $multiple) {
             $ids = array_filter($ids);
             if (empty($ids)) {
                 return [];
