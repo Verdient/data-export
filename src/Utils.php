@@ -6,6 +6,8 @@ namespace Verdient\Hyperf3\DataExport;
 
 use Closure;
 use Hyperf\Coroutine\Parallel;
+use Hyperf\DbConnection\Model\Model;
+use InvalidArgumentException;
 use Verdient\Hyperf3\Database\Builder;
 
 /**
@@ -53,27 +55,42 @@ class Utils
 
     /**
      * 获取器
-     * @param Builder $builder 查询构建器
+     * @param string $class 类名
      * @param array $columns 要查询的字段集合
+     * @param bool $multiple 是否是多个
      * @param string $filterKey 用于检索的键名
      * @param string $indexKey 用于索引的键名
-     * @param bool $multiple 是否是多个
      * @author Verdient。
      */
     public static function fetcher(
-        Builder $builder,
+        string $class,
         array $columns,
-        string $filterKey = 'id',
-        string $indexKey = 'id',
-        bool $multiple = false
+        bool $multiple = false,
+        ?string $filterKey = null,
+        ?string $indexKey = null
     ): Closure {
-        return function (array $ids) use ($builder, $columns, $filterKey, $indexKey, $multiple) {
+
+        if (!is_subclass_of($class, Model::class)) {
+            throw new InvalidArgumentException('Parameter $class of ' . __METHOD__ . ' must be subclass of ') . Model::class;
+        }
+
+        if (!$filterKey) {
+            $filterKey = (new $class)->getKeyName();
+        }
+
+        if (!$indexKey) {
+            $indexKey = $filterKey;
+        }
+
+        return function (array $ids) use ($class, $columns, $filterKey, $indexKey, $multiple) {
             $ids = array_filter($ids);
             if (empty($ids)) {
                 return [];
             }
             $result = [];
-            $builder = $builder
+            /** @var Builder */
+            $builder = $class::query();
+            $builder
                 ->select($columns)
                 ->whereIn($filterKey, array_unique($ids))
                 ->applyScopes()
