@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Verdient\Hyperf3\DataExport;
 
+use Closure;
 use Hyperf\Coroutine\Parallel;
 use Verdient\Hyperf3\Database\Builder;
 
@@ -21,7 +22,7 @@ class Utils
      * @return Closure
      * @author Verdient。
      */
-    public static function parallel($ids, callable $fetcher, $batchSize = 10000)
+    public static function parallel($ids, callable $fetcher, $batchSize = 10000): Closure
     {
         return function () use ($ids, $fetcher, $batchSize) {
             if (count($ids) <= $batchSize) {
