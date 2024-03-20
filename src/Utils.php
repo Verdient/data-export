@@ -22,7 +22,7 @@ class Utils
      * @return Closure
      * @author Verdient。
      */
-    public static function parallel($ids, callable $fetcher, $batchSize = 10000): Closure
+    public static function parallel(array $ids, callable $fetcher, int $batchSize = 10000): Closure
     {
         return function () use ($ids, $fetcher, $batchSize) {
             if (count($ids) <= $batchSize) {
@@ -59,41 +59,48 @@ class Utils
      * @param string $filterKey 用于检索的键名
      * @param string $indexKey 用于索引的键名
      * @param bool $multiple 是否是多个
-     * @return array
      * @author Verdient。
      */
-    public static function fetcher(Builder $builder, array $ids, array $columns, $filterKey = 'id', $indexKey = 'id', $multiple = false)
-    {
-        $ids = array_filter($ids);
-        if (empty($ids)) {
-            return [];
-        }
-        $result = [];
-        $builder = $builder
-            ->select($columns)
-            ->whereIn($filterKey, array_unique($ids))
-            ->applyScopes()
-            ->getQuery();
-        if ($multiple) {
-            foreach ($builder
-                ->getConnection()
-                ->cursor($builder->toSql(), $builder->getBindings()) as $row) {
-                $key = $row->$indexKey;
-                if (!isset($result[$key])) {
-                    $result[$key] = [(array) $row];
-                } else {
-                    $result[$key][] = (array) $row;
+    public static function fetcher(
+        Builder $builder,
+        array $ids,
+        array $columns,
+        string $filterKey = 'id',
+        string $indexKey = 'id',
+        bool $multiple = false
+    ): Closure {
+        return function () use ($builder, $ids, $columns, $filterKey, $indexKey, $multiple) {
+            $ids = array_filter($ids);
+            if (empty($ids)) {
+                return [];
+            }
+            $result = [];
+            $builder = $builder
+                ->select($columns)
+                ->whereIn($filterKey, array_unique($ids))
+                ->applyScopes()
+                ->getQuery();
+            if ($multiple) {
+                foreach ($builder
+                    ->getConnection()
+                    ->cursor($builder->toSql(), $builder->getBindings()) as $row) {
+                    $key = $row->$indexKey;
+                    if (!isset($result[$key])) {
+                        $result[$key] = [(array) $row];
+                    } else {
+                        $result[$key][] = (array) $row;
+                    }
+                }
+            } else {
+                foreach ($builder
+                    ->getConnection()
+                    ->cursor($builder->toSql(), $builder->getBindings()) as $row) {
+                    $key = $row->$indexKey;
+
+                    $result[$row->$indexKey] = (array) $row;
                 }
             }
-        } else {
-            foreach ($builder
-                ->getConnection()
-                ->cursor($builder->toSql(), $builder->getBindings()) as $row) {
-                $key = $row->$indexKey;
-
-                $result[$row->$indexKey] = (array) $row;
-            }
-        }
-        return $result;
+            return $result;
+        };
     }
 }
