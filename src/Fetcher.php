@@ -67,6 +67,17 @@ class Fetcher
     }
 
     /**
+     * 创建新的获取器
+     * @param string $class 类名
+     * @param string[] $columns 要查询的字段集合
+     * @author Verdient。
+     */
+    public static function create(string $class, array $columns): static
+    {
+        return new static($class, $columns);
+    }
+
+    /**
      * 获取模型
      * @author Verdient。
      */
