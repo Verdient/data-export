@@ -57,15 +57,15 @@ class Utils
      * 获取器
      * @param string $class 类名
      * @param array $columns 要查询的字段集合
-     * @param bool $multiple 是否是多个
-     * @param string $filterKey 用于检索的键名
-     * @param string $indexKey 用于索引的键名
+     * @param bool $group 是否分组
+     * @param ?string $filterKey 用于检索的键名
+     * @param ?string $indexKey 用于索引的键名
      * @author Verdient。
      */
     public static function fetcher(
         string $class,
         array $columns,
-        bool $multiple = false,
+        bool $group = false,
         ?string $filterKey = null,
         ?string $indexKey = null
     ): Closure {
@@ -82,7 +82,7 @@ class Utils
             $indexKey = $filterKey;
         }
 
-        return function (array $ids) use ($class, $columns, $filterKey, $indexKey, $multiple) {
+        return function (array $ids) use ($class, $columns, $filterKey, $indexKey, $group) {
             $ids = array_filter($ids);
             if (empty($ids)) {
                 return [];
@@ -95,7 +95,7 @@ class Utils
                 ->whereIn($filterKey, array_unique($ids))
                 ->applyScopes()
                 ->getQuery();
-            if ($multiple) {
+            if ($group) {
                 foreach ($builder
                     ->getConnection()
                     ->cursor($builder->toSql(), $builder->getBindings()) as $row) {
