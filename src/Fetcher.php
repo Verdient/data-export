@@ -102,7 +102,6 @@ class Fetcher
         return $this->filterKey;
     }
 
-
     /**
      * 获取用于检索的键名
      * @author Verdient。
@@ -116,6 +115,17 @@ class Fetcher
     }
 
     /**
+     * 设置检索键名
+     * @param string $name 名称
+     * @author Verdient。
+     */
+    public function filterBy(string $name)
+    {
+        $this->filterKey = $name;
+        return $this;
+    }
+
+    /**
      * 设置索引键名
      * @param string $name 名称
      * @author Verdient。
@@ -126,7 +136,6 @@ class Fetcher
         $this->isGroup = false;
         return $this;
     }
-
 
     /**
      * 设置分组键名
@@ -192,16 +201,21 @@ class Fetcher
             $result = [];
 
             foreach ($parallel->wait() as $partResult) {
-                if (array_is_list($partResult)) {
-                    foreach ($partResult as $result2) {
-                        $result[] = $result2;
-                    }
-                } else {
+                if (!$this->isGroup) {
                     foreach ($partResult as $key => $result2) {
                         $result[$key] = $result2;
                     }
+                } else {
+                    foreach ($partResult as $key => $result2) {
+                        if (isset($result[$key])) {
+                            $result[$key] = array_merge($result[$key], $result2);
+                        } else {
+                            $result[$key] = $result2;
+                        }
+                    }
                 }
             }
+
             return $result;
         }
 
