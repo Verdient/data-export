@@ -127,12 +127,14 @@ class Fetcher
 
     /**
      * 设置索引键名
-     * @param string $name 名称
+     * @param ?string $name 名称
      * @author Verdient。
      */
-    public function keyBy(string $name)
+    public function keyBy(?string $name)
     {
-        $this->indexKey = $name;
+        if ($name) {
+            $this->indexKey = $name;
+        }
         $this->isGroup = false;
         return $this;
     }
@@ -142,9 +144,11 @@ class Fetcher
      * @param string $name 名称
      * @author Verdient。
      */
-    public function groupBy(string $name)
+    public function groupBy(?string $name = null)
     {
-        $this->indexKey = $name;
+        if ($name) {
+            $this->indexKey = $name;
+        }
         $this->isGroup = true;
         return $this;
     }
@@ -245,6 +249,8 @@ class Fetcher
         $connection = $builder->getConnection();
 
         $indexKey = $this->getIndexKey();
+
+        $result = [];
 
         if ($this->isGroup) {
             foreach ($connection
